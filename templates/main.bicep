@@ -277,6 +277,9 @@ module conc8k102 'connection.bicep' ={
   // connection from instances of VPN GW to c8k-10-pip2 (represented by lngc8k102)
   // 
   name: 'con-c8k-10-2'
+  dependsOn:[
+    conc8k101
+  ]
   scope: rg   
   params: {
     connectionname: 'con-c8k-10-2'
@@ -303,9 +306,12 @@ module conc8k201 'connection.bicep' ={
 module conc8k202 'connection.bicep' ={
   // connection from both instances of VPN GW to c8k-20-pip2 (represented by lngc8k202)
   name: 'con-c8k-20-2'
+  dependsOn:[
+    conc8k201
+  ]
   scope: rg   
   params: {
-    connectionname: 'con-c8k-20'
+    connectionname: 'con-c8k-20-2'
     vnetgwid: clientgw.outputs.vnetgwId
     lngid: lngc8k202.outputs.lngid
     key: vpnkey
