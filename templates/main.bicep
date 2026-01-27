@@ -295,7 +295,7 @@ module conc8k201 'connection.bicep' ={
   name: 'con-c8k-20-1'
   scope: rg   
   params: {
-    connectionname: 'con-c8k-20'
+    connectionname: 'con-c8k-20-1'
     vnetgwid: clientgw.outputs.vnetgwId
     lngid: lngc8k201.outputs.lngid
     key: vpnkey
