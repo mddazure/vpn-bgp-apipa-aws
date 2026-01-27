@@ -6,7 +6,8 @@ param outsideSubnet1id string
 param insideIP string
 param outsideIP0 string
 param outsideIP1 string
-param pubIpId string
+param pubIp1Id string
+param pubIp2Id string
 param adminUsername string
 param adminPassword string
 param nsGId string
@@ -48,7 +49,7 @@ resource outsidenic0 'Microsoft.Network/networkInterfaces@2020-11-01' = {
             id: outsideSubnet0id
           }
           publicIPAddress: {
-            id: pubIpId
+            id: pubIp1Id
           }
           primary: true
           privateIPAllocationMethod: 'Static'
@@ -74,7 +75,7 @@ resource outsidenic1 'Microsoft.Network/networkInterfaces@2020-11-01' = {
             id: outsideSubnet1id
           }
           publicIPAddress: {
-            id: pubIpId
+            id: pubIp2Id
           }
           primary: true
           privateIPAllocationMethod: 'Static'

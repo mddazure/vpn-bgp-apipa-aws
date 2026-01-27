@@ -179,7 +179,8 @@ module providerWeb2 'vm-web.bicep' = {
     outsideIP0: c8k10outside0IP
     outsideIP1: c8k10outside1IP
     nsGId: outsideNsg.outputs.nsgId
-    pubIpId: providerVnet.outputs.pubip1Id
+    pubIp1Id: providerVnet.outputs.pubip1Id
+    pubIp2Id: providerVnet.outputs.pubip2Id
     adminUsername: adminUsername
     adminPassword: adminPassword
   }
@@ -197,7 +198,8 @@ module providerC8k20 'c8k.bicep' = {
     outsideIP0: c8k20outside0IP
     outsideIP1: c8k20outside1IP
     nsGId: outsideNsg.outputs.nsgId
-    pubIpId: providerVnet.outputs.pubip2Id
+    pubIp1Id: providerVnet.outputs.pubip3Id
+    pubIp2Id: providerVnet.outputs.pubip4Id
     adminUsername: adminUsername
     adminPassword: adminPassword
   }
