@@ -95,7 +95,7 @@ resource ck8 'Microsoft.Compute/virtualMachines@2020-06-01' = {
   }
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_D2as_v5'
+      vmSize: 'Standard_D8as_v5'
     }
     storageProfile: {
       imageReference: {
