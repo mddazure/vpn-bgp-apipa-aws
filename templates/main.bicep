@@ -44,10 +44,10 @@ param providerVmprivateip string = '10.10.2.4'
 param providerWeb1privateip string = '10.10.2.5'
 param providerWeb2privateip string = '10.10.2.6'
 
-param c8k10Apipa1 string = '169.254.21.1' // tunnel101 on c8k-10 = bgp neighbor 169.254.21.2 update source
-param c8k10Apipa2 string = '169.254.22.5' // tunnel102 on c8k-10 = bgp neighbor 169.254.22.6 update source
-param c8k20Apipa1 string = '169.254.21.5' // tunnel101 on c8k-20 = bgp neighbor 169.254.21.6 update source
-param c8k20Apipa2 string = '169.254.22.1' // tunnel102 on c8k-20 = bgp neighbor 169.254.22.2update source
+param c8k10Apipa1 string = '169.254.21.1' // tunnel101 on c8k-10 = bgp neighbor 169.254.21.2 update source - lng-c8k-10-1
+param c8k10Apipa2 string = '169.254.22.5' // tunnel102 on c8k-10 = bgp neighbor 169.254.22.6 update source - lng-c8k-10-2
+param c8k20Apipa1 string = '169.254.22.1' // tunnel101 on c8k-20 = bgp neighbor 169.254.21.6 update source - lng-c8k-20-1
+param c8k20Apipa2 string = '169.254.21.5' // tunnel102 on c8k-20 = bgp neighbor 169.254.22.2update source - lng-c8k-20-2
 
 param instance0Apipa1 string = '169.254.21.2'  // Gateway Instance 0 IP
 param instance0Apipa2 string = '169.254.22.2'  // Gateway Instance 1 IP

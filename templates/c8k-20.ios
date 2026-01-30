@@ -69,7 +69,7 @@ interface Tunnel102
 ! default route pointing to outside subnet default gateway, so that tunnel outside traffic and internet go out LAN port
 ip route 0.0.0.0 0.0.0.0 GigabitEthernet1 10.10.0.1
 ! route to VNET Gateway Instance1 public ip to outside interface / public ip GigabitEthernet3
-ip route [gw-2-pip] 255.255.255.255 GigabitEthernet3 10.10.0.1
+ip route [gw-2-pip] 255.255.255.255 GigabitEthernet3 10.10.10.1
 ! route to ars subnet pointing to inside interface
 ip route 10.10.4.0 255.255.255.0 GigabitEthernet2 10.10.1.1
 !
