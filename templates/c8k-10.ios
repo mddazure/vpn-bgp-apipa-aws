@@ -4,7 +4,7 @@ interface GigabitEthernet1
  no shutdown
 !
 interface GigabitEthernet2
- description second outside interface
+ description inside interface
  ip address dhcp
  no shutdown
 !
@@ -61,7 +61,7 @@ interface Tunnel102
  description tunnel to Instance 1 - sourced from outside interface / public ip GigabitEthernet3
  ip address 169.254.22.5 255.255.255.252
  ip tcp adjust-mss 1350
- tunnel source GigabitEthernet1
+ tunnel source GigabitEthernet3
  tunnel mode ipsec ipv4 
  tunnel destination [gw-2-pip]
  tunnel protection ipsec profile IPSEC-PROFILE

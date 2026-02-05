@@ -26,7 +26,7 @@ Four Local Network Gateways represent the NVA's:
 
 Connection objects connect the VNET Gateway to the LNGs. With an Active-Active VNET Gateway each Connection object represents *two* tunnels, one from each Gateway Instance to the LNG it connects to. When the remote device has *two* public endpoints, and is represented by *two* LNGs (which is the more common configuration), this reults in a full bow-tie of four tunnels. 
 
-In the the AWS set-up we have *four* LNGs, and we need *four* Connections - of which only one tunnel is actually used. The other tunnel does not have a corresponding tunnel interface configuration on the NVA (or AWS VPN Gateway) and remains unused.
+In the AWS set-up we have *four* LNGs, and we need *four* Connections - of which only one tunnel of each is actually used. The other tunnel does not have a corresponding tunnel interface configuration on the NVA (or AWS VPN Gateway) and remains unused.
 
 |Connection   |From GW |To LNG      | NVA Public IP|Custom BGP Address     |NVA Tunnel int  | NVA BGP IP | 
 |-------------|--------|------------|--------------|--------------------   |----------------|------------|
@@ -103,3 +103,4 @@ Copy and paste the configurations into each of the NVAs.
 On both Cisco 8000v NVA's:
 
 - Verify that the Tunnel interfaces are up by entering `sh ip int brief`:
+
