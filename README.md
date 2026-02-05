@@ -100,7 +100,168 @@ Copy [c8k-10.ios](https://raw.githubusercontent.com/mddazure/vpn-bgp-apipa-aws/r
 
 Copy and paste the configurations into each of the NVAs. 
 
+## Inspect
+
 On both Cisco 8000v NVA's:
 
 - Verify that the Tunnel interfaces are up by entering `sh ip int brief`:
+
+```
+c8k-10#sh ip int brief
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet1       10.10.0.4       YES DHCP   up                    up      
+GigabitEthernet2       10.10.1.4       YES DHCP   up                    up      
+GigabitEthernet3       10.10.10.4      YES DHCP   up                    up      
+Tunnel101              169.254.21.1    YES manual up                    up      
+Tunnel102              169.254.22.5    YES manual up                    up      
+VirtualPortGroup0      192.168.35.101  YES NVRAM  up                    up
+
+c8k-20#sh ip int brief
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet1       10.10.0.5       YES DHCP   up                    up      
+GigabitEthernet2       10.10.1.5       YES DHCP   up                    up      
+GigabitEthernet3       10.10.10.5      YES DHCP   up                    up      
+Tunnel101              169.254.22.1    YES manual up                    up      
+Tunnel102              169.254.21.5    YES manual up                    up      
+VirtualPortGroup0      192.168.35.101  YES NVRAM  up                    up      
+```
+- Verify that the BGP neighbors relationships to the VNET Gateway and to Azure Route Server are established by entering `sh ip bgp summary`:
+
+```
+c8k-10#sh ip bgp summary
+BGP router identifier 169.254.22.5, local AS number 65002
+BGP table version is 252, main routing table version 252
+2 network entries using 496 bytes of memory
+4 path entries using 544 bytes of memory
+2/2 BGP path/bestpath attribute entries using 592 bytes of memory
+2 BGP AS-PATH entries using 48 bytes of memory
+0 BGP route-map cache entries using 0 bytes of memory
+0 BGP filter-list cache entries using 0 bytes of memory
+BGP using 1680 total bytes of memory
+BGP activity 7/5 prefixes, 133/129 paths, scan interval 60 secs
+5 networks peaked at 11:36:04 Jan 30 2026 UTC (5d22h ago)
+
+Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.10.4.4       4        65515   12742   12272      252    0    0 1w0d            1
+10.10.4.5       4        65515   12741   12268      252    0    0 1w0d            1
+169.254.21.2    4        65001   12883   12492      252    0    0 1w0d            1
+169.254.22.6    4        65001    9834    9496      252    0    0 5d22h           1
+
+c8k-20#sh ip bgp summary
+BGP router identifier 169.254.22.1, local AS number 65002
+BGP table version is 5, main routing table version 5
+2 network entries using 496 bytes of memory
+4 path entries using 544 bytes of memory
+2/2 BGP path/bestpath attribute entries using 592 bytes of memory
+2 BGP AS-PATH entries using 48 bytes of memory
+0 BGP route-map cache entries using 0 bytes of memory
+0 BGP filter-list cache entries using 0 bytes of memory
+BGP using 1680 total bytes of memory
+BGP activity 7/5 prefixes, 13/9 paths, scan interval 60 secs
+3 networks peaked at 11:38:46 Jan 30 2026 UTC (5d22h ago)
+
+Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+10.10.4.4       4        65515    9814    9460        5    0    0 5d23h           1
+10.10.4.5       4        65515    9816    9459        5    0    0 5d23h           1
+169.254.21.6    4        65001    9828    9486        5    0    0 5d22h           1
+169.254.22.2    4        65001    9808    9461        5    0    0 5d22h           1
+```
+Now let's look at the BGP table, which shows the routes received via BGP:
+
+```
+c8k-10#sh ip bgp
+BGP table version is 252, local router ID is 169.254.22.5
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal, 
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter, 
+              x best-external, a additional-path, c RIB-compressed, 
+              t secondary path, L long-lived-stale,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *    10.0.0.0/16      169.254.21.6                           0 65001 i
+ *>                    169.254.21.2                           0 65001 i
+ *>   10.10.0.0/16     10.10.4.4                              0 65515 i
+ *                     10.10.4.5                              0 65515 i
+
+c8k-20#sh ip bgp       
+BGP table version is 5, local router ID is 169.254.22.1
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal, 
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter, 
+              x best-external, a additional-path, c RIB-compressed, 
+              t secondary path, L long-lived-stale,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *    10.0.0.0/16      169.254.21.6                           0 65001 i
+ *>                    169.254.21.2                           0 65001 i
+ *    10.10.0.0/16     10.10.4.5                              0 65515 i
+ *>                    10.10.4.4                              0 65515 i
+ ```
+ This shows that each NVA learns the local VNET prefix from Route Server (AS Path 65515), and the remote prefix via the VPN (AS Path 65001). Note that on both NVA's the Next Hop addresses for the remote prefix are the same, even though they have neighbor relationships with different endpoints on the VNET Gateway. Apparently the VNET Gateway advertises this prefix with the same Next Hop to all neighbors:
+```
+c8k-10#sh ip bgp detail 
+BGP routing table entry for 10.0.0.0/16, version 2
+  Paths: (2 available, best #2, table default)
+  Advertised to update-groups:
+     1         
+  Refresh Epoch 1
+  65001, (received & used)
+    169.254.21.6 from 169.254.22.6 (10.0.3.5)           <-----
+      Origin IGP, localpref 100, valid, external
+      rx pathid: 0, tx pathid: 0
+      Updated on Jan 30 2026 11:36:07 UTC
+  Refresh Epoch 1
+  65001, (received & used)
+    169.254.21.2 from 169.254.21.2 (10.0.3.4)           <-----
+      Origin IGP, localpref 100, valid, external, best
+      rx pathid: 0, tx pathid: 0x0
+      Updated on Jan 28 2026 15:32:20 UTC
+
+
+c8k-20#sh ip bgp detail
+BGP routing table entry for 10.0.0.0/16, version 3
+  Paths: (2 available, best #2, table default)
+  Advertised to update-groups:
+     5         
+  Refresh Epoch 1
+  65001, (received & used)
+    169.254.21.6 from 169.254.21.6 (10.0.3.5)           <-----
+      Origin IGP, localpref 100, valid, external
+      rx pathid: 0, tx pathid: 0
+      Updated on Jan 30 2026 11:39:47 UTC
+  Refresh Epoch 1
+  65001, (received & used)
+    169.254.21.2 from 169.254.22.2 (10.0.3.4)           <-----
+      Origin IGP, localpref 100, valid, external, best
+      rx pathid: 0, tx pathid: 0x0
+      Updated on Jan 30 2026 11:38:46 UTC
+```
+The route marked "best" is installed in the routing table, which means that all traffic is sent over that single path (VPN tunnel). This is the default in BGP:
+```
+c8k-10#sh ip route
+...
+Gateway of last resort is 10.10.0.1 to network 0.0.0.0
+
+S*    0.0.0.0/0 [1/0] via 10.10.0.1
+      10.0.0.0/8 is variably subnetted, 9 subnets, 3 masks
+B        10.0.0.0/16 [20/0] via 169.254.21.2, 1w0d      <-----
+B        10.10.0.0/16 [20/0] via 10.10.4.4, 1w0d
+...
+```
+The device can be set to use both tunnels by including the `maximum-paths 2` statement under the BGP configuration:
+```
+c8k-10#sh ip route
+Gateway of last resort is 10.10.0.1 to network 0.0.0.0
+
+S*    0.0.0.0/0 [1/0] via 10.10.0.1
+      10.0.0.0/8 is variably subnetted, 9 subnets, 3 masks
+B        10.0.0.0/16 [20/0] via 169.254.21.6, 00:00:06  <-----
+                     [20/0] via 169.254.21.2, 00:00:06  <-----
+B        10.10.0.0/16 [20/0] via 10.10.4.5, 00:00:06
+                      [20/0] via 10.10.4.4, 00:00:06
+```
+
+
 
