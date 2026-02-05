@@ -72,6 +72,11 @@ ip route 0.0.0.0 0.0.0.0 GigabitEthernet1 10.10.0.1
 ip route [gw-2-pip] 255.255.255.255 GigabitEthernet3 10.10.10.1
 ! route to ars subnet pointing to inside interface
 ip route 10.10.4.0 255.255.255.0 GigabitEthernet2 10.10.1.1
+! static routes to the APIPA tunnel subnets between the other c8k and the Gateway 
+! these routes necessary because the gateway may send APIPA endpoints from the other tunnel subnets as next hops
+! and these need to be recursively looked up
+ip route 169.254.21.4 255.255.255.252 Tunnel102
+ip route 169.254.22.0 255.255.255.252 Tunnel101
 !
 router bgp 65002
 bgp log-neighbor-changes
