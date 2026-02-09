@@ -9,7 +9,7 @@ Common practice is for remote devices to have a single public IP address per ins
 
 [How to connect AWS and Azure using a BGP-enabled VPN gateway](https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-howto-aws-bgp) describes how to build a highly available S2S VPN connection between AWS and Azure.
 
-This lab deploys a S2S VPN in the configuration required by AWS.
+This lab deploys a S2S VPN in the configuration required by AWS. The remote (AWS) end of the connection is emulated by a pair of Cisco 8000v Network Virtual Appliances, each with two outside interfaces with Public IP addresses and one insire interface.
 
 ## Architecture
 
