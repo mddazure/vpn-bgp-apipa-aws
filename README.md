@@ -28,18 +28,31 @@ Connection objects connect the VNET Gateway to the LNGs. With an Active-Active V
 
 In the AWS set-up we have *four* LNGs, and we need *four* Connections - of which only one tunnel of each is actually used. The other tunnel does not have a corresponding tunnel interface configuration on the NVA (or AWS VPN Gateway) and remains unused.
 
-|Connection   |From GW |To LNG      | NVA Public IP|Custom BGP Address     |NVA Tunnel int  | NVA BGP IP | 
-|-------------|--------|------------|--------------|--------------------   |----------------|------------|
-|con-c8k-10-1 |Inst 0  |lng-c8k-10-1|c8k-10-pip1   |169.254.21.2           |c8k-10 Tunnel101|169.254.21.1|
-|             |Inst 1  |            |              |169.254.21.6 (not used)|none            |none        |
-|con-c8k-10-2 |Inst 0  |lng-c8k-10-2|              |169.254.22.2 (not used)|none            |none        |
-|             |Inst 1  |            |c8k-10-pip2   |169.254.22.6           |c8k-10 Tunnel102|169.254.22.5|
-|con-c8k-20-1 |Inst 0  |lng-c8k-20-1|c8k-20-pip1   |169.254.22.2           |c8k-20 Tunnel101|169.254.22.1|
-|             |Inst 1  |            |              |169.254.21.6 (not used)|none            |none        |
-|con-c8k-20-2 |Inst 0  |lng-c8k-20-2|              |169.254.22.2 (not used)|none            |none        |
-|             |Inst 1  |            |c8k-20-pip2   |169.254.21.6           |c8k-20 Tunnel102|169.254.21.5|
+|Connection   |From GW |To LNG      | NVA Public IP|
+|-------------|--------|------------|--------------|
+|con-c8k-10-1 |Inst 0  |lng-c8k-10-1|c8k-10-pip1   |
+|             |Inst 1  |            |              |
+|con-c8k-10-2 |Inst 0  |lng-c8k-10-2|              |
+|             |Inst 1  |            |c8k-10-pip2   |
+|con-c8k-20-1 |Inst 0  |lng-c8k-20-1|c8k-20-pip1   |
+|             |Inst 1  |            |              |
+|con-c8k-20-2 |Inst 0  |lng-c8k-20-2|              |
+|             |Inst 1  |            |c8k-20-pip2   |
 
 Each instance of the VNET Gateway is configured with two Custom (APIPA) BGP addresses. Each Connection object has two APIPA addresses selected, of which only one is used per the table above. The tunnel interfaces on the NVA's are assigned APIPA addresses, which are also used to source the neighbors to the VNET Gateway. This configuration does not use Loopback addresses.
+
+|Connection   |Custom BGP Address     |NVA Tunnel int  | NVA BGP IP | 
+|-------------|-----------------------|----------------|------------|
+|con-c8k-10-1 |169.254.21.2           |c8k-10 Tunnel101|169.254.21.1|
+|             |169.254.21.6 (not used)|none            |none        |
+|con-c8k-10-2 |169.254.22.2 (not used)|none            |none        |
+|             |169.254.22.6           |c8k-10 Tunnel102|169.254.22.5|
+|con-c8k-20-1 |169.254.22.2           |c8k-20 Tunnel101|169.254.22.1|
+|             |169.254.21.6 (not used)|none            |none        |
+|con-c8k-20-2 |169.254.22.2 (not used)|none            |none        |
+|             |169.254.21.6           |c8k-20 Tunnel102|169.254.21.5|
+
+
 
 ![image](/images/vpn-bgp-apipa-aws.png)
 
