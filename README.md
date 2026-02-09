@@ -1,4 +1,4 @@
-# **Highly available Site-to-Site VPN to AWS with BGP over APIPA addresses**
+# **Highly available Site-to-Site VPN to Amazon Web Services, with BGP over APIPA addresses**
 A site-to-site VPN connection to Amazon Web Services is somewhat different from the usual Azure-to-onprem or Azure-to-Azure S2S VPN connections. 
 
 The main complexities are:
