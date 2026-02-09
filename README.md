@@ -16,6 +16,7 @@ This lab deploys a S2S VPN in the configuration required by AWS.
 The deployment consists of a Client-VNET, holding a VNET Gateway, and a Provider-VNET containing a pair of Cisco 8000v NVAs that simulates the AWS end of the connection. Each NVA has *two* outside interfaces with a Public IP attached, on separate subnets.
 
 Four Local Network Gateways represent the NVA's:
+#### Local Network Gateways
 
 | LNG          |NVA Public IP | NVA BGP IP   | 
 |--------------|----------    |--------------|
@@ -28,6 +29,8 @@ Connection objects connect the VNET Gateway to the LNGs. With an Active-Active V
 
 In the AWS set-up we have *four* LNGs, and we need *four* Connections - of which only one tunnel of each is actually used. The other tunnel does not have a corresponding tunnel interface configuration on the NVA (or AWS VPN Gateway) and remains unused.
 
+#### Connections
+
 |Connection   |From GW |To LNG      | NVA Public IP|
 |-------------|--------|------------|--------------|
 |con-c8k-10-1 |Inst 0  |lng-c8k-10-1|c8k-10-pip1   |
@@ -39,7 +42,10 @@ In the AWS set-up we have *four* LNGs, and we need *four* Connections - of which
 |con-c8k-20-2 |Inst 0  |lng-c8k-20-2|              |
 |             |Inst 1  |            |c8k-20-pip2   |
 
-Each instance of the VNET Gateway is configured with two Custom (APIPA) BGP addresses. Each Connection object has two APIPA addresses selected, of which only one is used per the table above. The tunnel interfaces on the NVA's are assigned APIPA addresses, which are also used to source the neighbors to the VNET Gateway. This configuration does not use Loopback addresses.
+Each instance of the VNET Gateway is configured with two Custom (APIPA) BGP addresses. Each Connection object has two APIPA addresses selected, of which only one is used per the table above. The tunnel interfaces on the NVA's are assigned APIPA addresses, which are also used to source the neighbors to the VNET Gateway. 
+(This configuration does *not* use Loopback addresses to terminate the BGP neighbors, as opposed to the common standard configuration with a single public IP per remote vpn device described here: [Highly available Site-to-Site VPN with BGP over APIPA addresses](https://github.com/mddazure/vpn-bgp-apipa)).
+
+#### APIPA BGP Endpoints
 
 |Connection   |Custom BGP Address     |NVA Tunnel int  | NVA BGP IP | 
 |-------------|-----------------------|----------------|------------|
@@ -251,7 +257,7 @@ BGP routing table entry for 10.0.0.0/16, version 3
       rx pathid: 0, tx pathid: 0x0
       Updated on Jan 30 2026 11:38:46 UTC
 ```
-The route marked "best" is installed in the routing table, which means that all traffic is sent over that single path (VPN tunnel). This is the default in BGP:
+The route marked "best" is installed in the routing table, which means that all traffic is sent over that single path (VPN tunnel). This is the default in BGP.
 ```
 c8k-10#sh ip route
 ...
@@ -263,7 +269,14 @@ B        10.0.0.0/16 [20/0] via 169.254.21.2, 1w0d      <-----
 B        10.10.0.0/16 [20/0] via 10.10.4.4, 1w0d
 ...
 ```
-The device can be set to use both tunnels by including the `maximum-paths 2` statement under the BGP configuration:
+The device can be configured to use both tunnels by including the `maximum-paths 2` statement under the BGP configuration.
+```
+c8k-10#sh run | section bgp
+router bgp 65002
+...
+ maximum-paths 2
+ ```
+The route table now shows two equal cost routes for networks 10.0.0.0/16 (learned from VPN) and 10.10.0.0/16 (learned from ARS):
 ```
 c8k-10#sh ip route
 Gateway of last resort is 10.10.0.1 to network 0.0.0.0
@@ -275,6 +288,83 @@ B        10.0.0.0/16 [20/0] via 169.254.21.6, 00:00:06  <-----
 B        10.10.0.0/16 [20/0] via 10.10.4.5, 00:00:06
                       [20/0] via 10.10.4.4, 00:00:06
 ```
+Now let's look at the configuration on the Azure end of the connection.
 
+In the portal, navigate to client-Vnet-gw under the vpn-bgp-apipa-lab-rg Resource group. The overview page shows graphs for Total tunnel ingress and Total tunnel egress traffic:
 
+![image](/images/client-vnet-gw-overview.png)
 
+The Configuration page shows the Custom APIPA BGP addresses configured during the deployment:
+
+![image](/images/client-vnet-gw-configuration.png)
+
+Now navigate to the "Local Network Gateways" page under Hybrid Connectivty, and filter on the resource group the lab is deployed in. Note that there are *four* LNG's:
+
+![image](/images/local-network-gateways.png) 
+
+Each LNG is configured with one of the four remote device Public IP's and APIPA BGP endpoint addresses, per the [Local Network Gateways](#Local-Network-Gateways) table above:
+
+![image](/images/lng-c8k-10-1-config.png)
+
+Now navigate to Connections. There are four Connections, one from each Local Network Gateway to the VNET Gateway, per the [Connections](#Connections) table:
+
+![image](/images/connections.png)
+
+ Each connection actually represents two tunnels - one to each instance of the VNET Gateway. In the configuration deployed here, one tunnel of each Connection is left unused; it does not have a matching tunnel interface on the remote VPN devices and one BGP APIPA address is left unused per the [APIPA BGP Endpoints](#APIPA-BGP-Endpoints) table:
+
+![image](/images/con-8k-10-1-config.png)
+
+## Test
+Log on to `client-Vm` via Serial Console in the portal.
+
+Call the web servers `provider-Web1` and `provider-Web2` at `10.10.2.5` and 10.10.2.6` via Curl. Both should respond with their names:
+
+```
+AzureAdmin@client-Vm:~$ curl 10.10.2.5
+provider-Web1
+AzureAdmin@client-Vm:~$ curl 10.10.2.6
+provider-Web2
+```
+Download and run a shell script to continuously call both web servers:
+```
+wget https://raw.githubusercontent.com/mddazure/vpn-bgp-apipa-aws/refs/heads/main/templates/loop.sh && sudo chmod +x loop.sh && ./loop.sh
+...
+loop.sh.1           100%[===================>]      91  --.-KB/s    in 0s      
+
+2026-02-09 12:50:46 (5.72 MB/s) - ‘loop.sh.1’ saved [91/91]
+
+provider-Web1
+provider-Web2
+provider-Web1
+provider-Web2
+provider-Web1
+provider-Web2
+provider-Web1
+...
+```
+Now simulate a failure of NVA c8k-10:
+- log on to the device via Serial Console
+- shut down both outside interfaces
+
+```
+c8k-10(config-if)#int gig1
+c8k-10(config-if)#shut    
+c8k-10(config-if)#
+*Feb  9 13:11:25.194: %LINEPROTO-5-UPDOWN: Line protocol on Interface Tunnel101, changed state to downshut
+*Feb  9 13:11:27.198: %LINK-5-CHANGED: Interface GigabitEthernet1, changed state to administratively down
+*Feb  9 13:11:28.198: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet1, changed state to down
+c8k-10(config-if)#int gig3
+c8k-10(config-if)#shut    
+c8k-10(config-if)#
+*Feb  9 13:12:41.121: %LINEPROTO-5-UPDOWN: Line protocol on Interface Tunnel102, changed state to down
+*Feb  9 13:12:41.153: %CRYPTO-6-ISAKMP_ON_OFF: ISAKMP is OFF
+*Feb  9 13:12:43.124: %LINK-5-CHANGED: Interface GigabitEthernet3, changed state to administratively down
+*Feb  9 13:12:44.125: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet3, changed state to down
+```
+Depending on through which instance and tunnel the gateway sends traffic to the remote network, the flow of responses observed on Client-VM may be interrupted. If the flow continues when the outside interfaces on c8k-10 are shut, try shutting down on c8k-20.
+
+It may take up to three minutes for BGP to detect the failure: the default setting for the BGP Hold Timer is 180 seconds, which is the time that a BGP speaker waits for keep-alives before declaring its neighbor dead and reconverging the routing.
+
+The VNET Gateway does not do equal cost multipath routing over BGP-learned routes, even though it shows multiple routes in its BGP table. The connection may be interrupted for up to three minutes when a device fails or looses connectivity.
+
+In Expressroute, this is mitigated by [Bidirectional Forward Detection](https://learn.microsoft.com/en-us/azure/expressroute/expressroute-bfd) which detects a link failure in seconds. Unfortunately, BFD is not available on VPN connections.
