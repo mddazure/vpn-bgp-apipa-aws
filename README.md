@@ -317,7 +317,7 @@ Now navigate to Connections. There are four Connections, one from each Local Net
 ## Test
 Log on to `client-Vm` via Serial Console in the portal.
 
-Call the web servers `provider-Web1` and `provider-Web2` at `10.10.2.5` and 10.10.2.6` via Curl. Both should respond with their names:
+Call the web servers `provider-Web1` and `provider-Web2` at `10.10.2.5` and `10.10.2.6` via Curl. Both should respond with their names:
 
 ```
 AzureAdmin@client-Vm:~$ curl 10.10.2.5
@@ -327,7 +327,11 @@ provider-Web2
 ```
 Download and run a shell script to continuously call both web servers:
 ```
-wget https://raw.githubusercontent.com/mddazure/vpn-bgp-apipa-aws/refs/heads/main/templates/loop.sh && sudo chmod +x loop.sh && ./loop.sh
+wget https://raw.githubusercontent.com/mddazure/vpn-bgp-apipa-aws/refs/heads/main/templates/loop.sh && sudo 
+chmod +x loop.sh && ./loop.sh
+```
+
+```
 ...
 loop.sh.1           100%[===================>]      91  --.-KB/s    in 0s      
 
@@ -363,7 +367,19 @@ c8k-10(config-if)#
 ```
 Depending on through which instance and tunnel the gateway sends traffic to the remote network, the flow of responses observed on Client-VM may be interrupted. If the flow continues when the outside interfaces on c8k-10 are shut, try shutting down on c8k-20.
 
-It may take up to three minutes for BGP to detect the failure: the default setting for the BGP Hold Timer is 180 seconds, which is the time that a BGP speaker waits for keep-alives before declaring its neighbor dead and reconverging the routing.
+It may take up to three minutes for BGP to detect the failure: the default setting for the BGP Hold Timer is 180 seconds, which is the time that a BGP speaker waits for keep-alives before declaring its neighbor dead and reconverging.
+```c8k-10#
+*Feb  9 13:08:24.242: %BGP-3-NOTIFICATION: sent to neighbor 169.254.22.6 4/0 (hold time expired) 0 bytes 
+*Feb  9 13:08:24.243: %BGP-5-NBR_RESET: Neighbor 169.254.22.6 reset (BGP Notification sent)
+*Feb  9 13:08:24.243: %BGP-5-ADJCHANGE: neighbor 169.254.22.6 Down BGP Notification sent
+*Feb  9 13:08:24.243: %BGP_SESSION-5-ADJCHANGE: neighbor 169.254.22.6 IPv4 Unicast topology base removed from session  BGP Notification sent
+*Feb  9 13:09:10.327: %BGP-3-NOTIFICATION: sent to neighbor 169.254.21.2 4/0 (hold time expired) 0 bytes 
+*Feb  9 13:09:10.327: %BGP-5-NBR_RESET: Neighbor 169.254.21.2 reset (BGP Notification sent)
+*Feb  9 13:09:10.327: %BGP-5-ADJCHANGE: neighbor 169.254.21.2 Down BGP Notification sent
+*Feb  9 13:09:10.327: %BGP_SESSION-5-ADJCHANGE: neighbor 169.254.21.2 IPv4 Unicast topology base removed from session  BGP Notification sent
+```
+
+When c8k-10 finally concludes the VNET Gateway BGP neighbors are unreachable, it will actively withdraw it routes from Azure Routes Service, and ARS will then reprogram alternate routes via c8k-20.
 
 The VNET Gateway does not do equal cost multipath routing over BGP-learned routes, even though it shows multiple routes in its BGP table. The connection may be interrupted for up to three minutes when a device fails or looses connectivity.
 
