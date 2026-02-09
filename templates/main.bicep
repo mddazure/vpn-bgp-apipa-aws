@@ -1,5 +1,5 @@
 param location string = 'swedencentral'
-param rgname string = 'vpn-bgp-apipa-aws-rg3'
+param rgname string = 'vpn-bgp-apipa-aws-rg'
 
 param clientVnetName string = 'client-Vnet'
 param clientVnetIPrange string = '10.0.0.0/16'
