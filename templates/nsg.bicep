@@ -1,5 +1,5 @@
-param customerPip1 string
-param customerPip2 string
+param clientPip1 string
+param clientPip2 string
 param providerPip1 string
 param providerPip2 string
 param providerPip3 string
@@ -20,8 +20,8 @@ resource nsg  'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
           sourcePortRange: '*'
           destinationPortRange: '*'
           sourceAddressPrefixes: [
-            customerPip1
-            customerPip2
+            clientPip1
+            clientPip2
             providerPip1
             providerPip2
             providerPip3

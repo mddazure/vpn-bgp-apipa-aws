@@ -1,17 +1,16 @@
 param location string = 'swedencentral'
-param rgname string = 'vpn-bgp-apipa-aws-rg'
+param rgname string = 'vpn-bgp-apipa-aws-rg3'
 
-param customerVnetName string = 'client-Vnet'
-param customerVnetIPrange string = '10.0.0.0/16'
-param customerVmSubnetIPrange string = '10.0.2.0/24'
-param customerGwSubnetIPrange string = '10.0.3.0/24'
+param clientVnetName string = 'client-Vnet'
+param clientVnetIPrange string = '10.0.0.0/16'
+param clientVmSubnetIPrange string = '10.0.2.0/24'
+param clientGwSubnetIPrange string = '10.0.3.0/24'
 
-param customerVmName string = 'client-Vm'
-param customerVNETGWName string = 'client-Vnet-gw'
-param customerPip1Name string = 'gw-1-pip'
-param customerPip2Name string = 'gw-2-pip'
-param customerPip3Name string = 'client-Vm-pip'
-param customerVmprivateip string = '10.0.2.4'
+param clientVmName string = 'client-Vm'
+param clientVNETGWName string = 'client-Vnet-gw'
+param clientPip1Name string = 'gw-1-pip'
+param clientPip2Name string = 'gw-2-pip'
+param clientVmprivateip string = '10.0.2.4'
 
 param providerVnetName string = 'provider-Vnet'
 param providerVnetIPrange string = '10.10.0.0/16'
@@ -71,18 +70,17 @@ module prefix 'prefix.bicep' = {
   name: 'prefix'
   scope: rg
 }
-module customerVnet 'vnet.bicep' = {
-  name: 'customerVnet'
+module clientVnet 'vnet.bicep' = {
+  name: 'clientVnet'
   scope: rg
   params: {
-    vnetname: customerVnetName
-    vnetIPrange: customerVnetIPrange
-    vmSubnetIPrange: customerVmSubnetIPrange
-    gwSubnetIPrange: customerGwSubnetIPrange
+    vnetname: clientVnetName
+    vnetIPrange: clientVnetIPrange
+    vmSubnetIPrange: clientVmSubnetIPrange
+    gwSubnetIPrange: clientGwSubnetIPrange
     prefixId: prefix.outputs.prefixId
-    pip1Name: customerPip1Name
-    pip2Name: customerPip2Name
-    pip3Name: customerPip3Name
+    pip1Name: clientPip1Name
+    pip2Name: clientPip2Name
   }
 }
 module providerVnet 'vnet.bicep' = {
@@ -107,22 +105,21 @@ module outsideNsg 'nsg.bicep' = {
   name: 'outsideNsg'
   scope: rg
   params: {
-    customerPip1: customerVnet.outputs.pubIp1
-    customerPip2: customerVnet.outputs.pubIp2
+    clientPip1: clientVnet.outputs.pubIp1
+    clientPip2: clientVnet.outputs.pubIp2
     providerPip1: providerVnet.outputs.pubIp1
     providerPip2: providerVnet.outputs.pubIp2
     providerPip3: providerVnet.outputs.pubIp3
     providerPip4: providerVnet.outputs.pubIp4
   }
 }
-module customerVm 'vm.bicep' = {
-  name: 'customerVm'
+module clientVm 'vm.bicep' = {
+  name: 'clientVm'
   scope: rg
   params: {
-    vmname: customerVmName
-    subnetId: customerVnet.outputs.vmSubnetId
-    vmprivateip: customerVmprivateip
-    vmpublicipid: customerVnet.outputs.pubip3Id
+    vmname: clientVmName
+    subnetId: clientVnet.outputs.vmSubnetId
+    vmprivateip: clientVmprivateip
     adminUsername: adminUsername
     adminPassword: adminPassword
   }
@@ -208,10 +205,10 @@ module clientgw 'gw.bicep' = {
   name: 'clientgw'
   scope: rg
   params: {
-  customerVNETGWName: customerVNETGWName
-  customerPip1Id: customerVnet.outputs.pubip1Id
-  customerPip2Id: customerVnet.outputs.pubip2Id
-  customerVnetId: customerVnet.outputs.vnetId  
+  clientVNETGWName: clientVNETGWName
+  clientPip1Id: clientVnet.outputs.pubip1Id
+  clientPip2Id: clientVnet.outputs.pubip2Id
+  clientVnetId: clientVnet.outputs.vnetId  
   instance0Apipa1: instance0Apipa1
   instance1Apipa1: instance1Apipa1
   instance0Apipa2: instance0Apipa2
