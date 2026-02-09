@@ -365,7 +365,7 @@ c8k-10(config-if)#
 *Feb  9 13:12:43.124: %LINK-5-CHANGED: Interface GigabitEthernet3, changed state to administratively down
 *Feb  9 13:12:44.125: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet3, changed state to down
 ```
-Depending on through which instance and tunnel the gateway sends traffic to the remote network, the flow of responses observed on Client-VM may be interrupted. If the flow continues when the outside interfaces on c8k-10 are shut, try shutting down on c8k-20.
+Depending on through which instance and tunnel the gateway sends traffic to the remote network, the flow of responses observed on Client-VM may be interrupted. If the flow continues when the outside interfaces on c8k-10 are shut, try shutting them down on c8k-20.
 
 It may take up to three minutes for BGP to detect the failure: the default setting for the BGP Hold Timer is 180 seconds, which is the time that a BGP speaker waits for keep-alives before declaring its neighbor dead and reconverging.
 ```c8k-10#
@@ -379,7 +379,7 @@ It may take up to three minutes for BGP to detect the failure: the default setti
 *Feb  9 13:09:10.327: %BGP_SESSION-5-ADJCHANGE: neighbor 169.254.21.2 IPv4 Unicast topology base removed from session  BGP Notification sent
 ```
 
-When c8k-10 finally concludes the VNET Gateway BGP neighbors are unreachable, it will actively withdraw it routes from Azure Routes Service, and ARS will then reprogram alternate routes via c8k-20.
+When c8k-10 finally concludes the VNET Gateway BGP neighbors are unreachable, it will actively withdraw it routes from ARS, and ARS will then reprogram alternate routes via c8k-20.
 
 The VNET Gateway does not do equal cost multipath routing over BGP-learned routes, even though it shows multiple routes in its BGP table. The connection may be interrupted for up to three minutes when a device fails or looses connectivity.
 
